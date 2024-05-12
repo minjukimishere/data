@@ -1,20 +1,25 @@
-from langchain_openai import ChatOpenAI
+#from langchain_openai import ChatOpenAI
+from langchain_community.llms import CTransformers
 
-llm = ChatOpenAI(api_key="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")
+#llm = ChatOpenAI(api_key="")
+#llama 이용
+llm = CTransformers(model='llama-2-7b-chat.ggmlv3.q2_K.bin', model_type='llama')
 
-from langchain_core.prompts import ChatPromptTemplate
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a world class technical documentation writer."),
-    ("user", "{input}")
-])
 
-from langchain_core.output_parsers import StrOutputParser
 
-output_parser = StrOutputParser()
+#from langchain_core.prompts import ChatPromptTemplate
+#prompt = ChatPromptTemplate.from_messages([
+#    ("system", "You are a world class technical documentation writer."),
+#    ("user", "{input}")
+#])
 
-chain = prompt | llm | output_parser
+#from langchain_core.output_parsers import StrOutputParser
 
-content="LLM"
+#output_parser = StrOutputParser()
+
+#chain = prompt | llm | output_parser
+
+#content="LLM"
 
 
 
@@ -33,7 +38,7 @@ import streamlit as st
 
 if st.button("검색"):
     with st.spinner('요약 중입니다...'):
-        result=chain.invoke({"input": content+"에 대한 자료조사 결과를 500자 이상의 한글로 요약해줘"})
+        result=llm.invoke("summerize about"+content)
         st.write(result)
 else:
     st.write("")
