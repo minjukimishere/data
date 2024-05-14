@@ -1,39 +1,70 @@
+#from dotenv import load_dotenv
+#load_dotenv()
+
+import streamlit as st
+import tempfile
+import os
+    
+
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+# import question
+from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(api_key="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")
+#챗봇
+from langchain.chains import RetrievalQA
 
-from langchain_core.prompts import ChatPromptTemplate
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a world class technical documentation writer."),
-    ("user", "{input}")
-])
+#제목
+st.title("ChatPDF")
+st.write("---")
 
-from langchain_core.output_parsers import StrOutputParser
-
-output_parser = StrOutputParser()
-
-chain = prompt | llm | output_parser
-
-content="LLM"
-
-
-
-#타이틀
 import streamlit as st
+import pandas as pd
+from io import StringIO
 
-st.title('자료 조사 프로그램')
+uploaded_file = st.file_uploader("Choose a file")
+if uploaded_file is not None:
+    # To read file as bytes:
+    bytes_data = uploaded_file.getvalue()
+    st.write(bytes_data)
 
-#텍스트 인풋
-import streamlit as st
+    # To convert to a string based IO:
+    stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+    st.write(stringio)
 
-content = st.text_input("무엇이 궁금하신가요?", "")
+    # To read file as string:
+    string_data = stringio.read()
+    st.write(string_data)
 
-#버튼
-import streamlit as st
+    # Can be used wherever a "file-like" object is accepted:
+    dataframe = pd.read_csv(uploaded_file)
+    st.write(dataframe)
 
-if st.button("검색"):
-    with st.spinner('요약 중입니다...'):
-        result=chain.invoke({"input": content+"에 대한 자료조사 결과를 500자 이상의 한글로 요약해줘"})
-        st.write(result)
-else:
-    st.write("")
+#Split
+text_splitter = RecursiveCharacterTextSplitter(
+    # Set a really small chunk size, just to show.
+    chunk_size=300,
+    chunk_overlap=20,
+    length_function=len,
+    is_separator_regex=False,
+)
+
+texts= text_splitter.split_documents(pages)
+
+#Embedding DB에 저장할 수 있는 형태로 변환
+from langchain_openai import OpenAIEmbeddings
+embeddings_model = OpenAIEmbeddings(api_key="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")
+
+
+#Question
+st.header("PDF에게 질문해보세요")
+question=st.text_input("질문을 입력하세요")
+
+if st.button('질문하기'):
+    llm = ChatOpenAI(api_key="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", temperature=0) #무작위성
+    qa_chain=RetrievalQA.from_chain_type(llm,retriever=db.as_retriever())
+    result=qa_chain.invoke({"query":question})
+    st.write(result)
+
+
